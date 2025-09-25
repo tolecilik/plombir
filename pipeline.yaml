@@ -1,0 +1,4 @@
+tasks:
+  - source: script.sh
+    product: None
+    class: ShellScript
