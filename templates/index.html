@@ -2,38 +2,61 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Server Monitor</title>
+    <title>Realtime Server Monitor</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; background: #1e1e2f; color: #fff; }
-        h1 { margin-top: 20px; }
-        .card { background: #2e2e42; padding: 20px; margin: 15px auto; border-radius: 12px; width: 300px; }
-        .value { font-size: 2em; margin: 10px 0; }
-        .container { display: flex; justify-content: center; flex-wrap: wrap; }
+        body { font-family: Arial, sans-serif; background: #1e1e2f; color: #fff; text-align: center; }
+        h1 { margin: 20px; }
+        .chart-container { width: 600px; margin: 20px auto; background: #2e2e42; padding: 20px; border-radius: 12px; }
     </style>
 </head>
 <body>
     <h1>🚀 Realtime Server Monitor</h1>
-    <div class="container">
-        <div class="card"><h2>CPU</h2><div class="value" id="cpu">0%</div></div>
-        <div class="card"><h2>RAM</h2><div class="value" id="ram">0%</div></div>
-        <div class="card"><h2>Swap</h2><div class="value" id="swap">0%</div></div>
-        <div class="card"><h2>GPU</h2><div class="value" id="gpu">Not Available</div></div>
-    </div>
+
+    <div class="chart-container"><canvas id="cpuChart"></canvas></div>
+    <div class="chart-container"><canvas id="ramChart"></canvas></div>
+    <div class="chart-container"><canvas id="swapChart"></canvas></div>
+    <div class="chart-container"><canvas id="gpuChart"></canvas></div>
 
     <script>
+        const createChart = (ctx, label, color) => new Chart(ctx, {
+            type: 'line',
+            data: { labels: [], datasets: [{ label, data: [], borderColor: color, fill: false }] },
+            options: { responsive: true, animation: false, scales: { y: { beginAtZero: true, max: 100 } } }
+        });
+
+        const cpuChart = createChart(document.getElementById('cpuChart'), 'CPU %', 'red');
+        const ramChart = createChart(document.getElementById('ramChart'), 'RAM %', 'blue');
+        const swapChart = createChart(document.getElementById('swapChart'), 'Swap %', 'orange');
+        const gpuChart = createChart(document.getElementById('gpuChart'), 'GPU Util %', 'green');
+
         async function fetchMetrics() {
             try {
-                let res = await fetch('/metrics');
-                let data = await res.json();
-                document.getElementById('cpu').innerText = data.cpu + "%";
-                document.getElementById('ram').innerText = data.ram + "%";
-                document.getElementById('swap').innerText = data.swap + "%";
-                document.getElementById('gpu').innerText = data.gpu;
+                const res = await fetch('/metrics');
+                const data = await res.json();
+                const time = new Date().toLocaleTimeString();
+
+                const pushData = (chart, value) => {
+                    chart.data.labels.push(time);
+                    chart.data.datasets[0].data.push(value !== null ? value : 0);
+                    if (chart.data.labels.length > 20) {
+                        chart.data.labels.shift();
+                        chart.data.datasets[0].data.shift();
+                    }
+                    chart.update();
+                };
+
+                pushData(cpuChart, data.cpu);
+                pushData(ramChart, data.ram);
+                pushData(swapChart, data.swap);
+                pushData(gpuChart, data.gpu_util);
+
             } catch (e) {
-                console.error("Error fetching metrics:", e);
+                console.error("Fetch error:", e);
             }
         }
-        setInterval(fetchMetrics, 2000); // update tiap 2 detik
+
+        setInterval(fetchMetrics, 2000);
         fetchMetrics();
     </script>
 </body>
