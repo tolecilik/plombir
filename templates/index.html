@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Server Monitor</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; background: #1e1e2f; color: #fff; }
+        h1 { margin-top: 20px; }
+        .card { background: #2e2e42; padding: 20px; margin: 15px auto; border-radius: 12px; width: 300px; }
+        .value { font-size: 2em; margin: 10px 0; }
+        .container { display: flex; justify-content: center; flex-wrap: wrap; }
+    </style>
+</head>
+<body>
+    <h1>🚀 Realtime Server Monitor</h1>
+    <div class="container">
+        <div class="card"><h2>CPU</h2><div class="value" id="cpu">0%</div></div>
+        <div class="card"><h2>RAM</h2><div class="value" id="ram">0%</div></div>
+        <div class="card"><h2>Swap</h2><div class="value" id="swap">0%</div></div>
+        <div class="card"><h2>GPU</h2><div class="value" id="gpu">Not Available</div></div>
+    </div>
+
+    <script>
+        async function fetchMetrics() {
+            try {
+                let res = await fetch('/metrics');
+                let data = await res.json();
+                document.getElementById('cpu').innerText = data.cpu + "%";
+                document.getElementById('ram').innerText = data.ram + "%";
+                document.getElementById('swap').innerText = data.swap + "%";
+                document.getElementById('gpu').innerText = data.gpu;
+            } catch (e) {
+                console.error("Error fetching metrics:", e);
+            }
+        }
+        setInterval(fetchMetrics, 2000); // update tiap 2 detik
+        fetchMetrics();
+    </script>
+</body>
+</html>
