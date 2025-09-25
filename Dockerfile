@@ -1,17 +1,15 @@
-FROM ubuntu:20.04
+FROM python:3.9-slim
 
-# Install tools
-RUN apt-get update && apt-get install -y \
-    wget curl bash \
-    && rm -rf /var/lib/apt/lists/*
+# Install dependencies
+RUN apt-get update && apt-get install -y wget procps && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Copy files ke container
+# Install Flask & psutil
+RUN pip install flask psutil
+
+# Copy files
 COPY . .
 
-# Kasih izin eksekusi
-RUN chmod +x script.sh
-
-# Jalankan script
-CMD ["./script.sh"]
+# Jalankan Flask di port 80
+CMD ["python", "app.py"]
